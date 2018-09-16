@@ -19,12 +19,13 @@ enum GetBaseAndChildSchemasError: Error {
     case missingChild
     case badSubschemaType(SchemaType)
     case notAllOf
+    case notOneOf
     case incorrectSubschemaCount
 }
 
 /// Gets the base schema and child schema from a definition that defines an
 /// `allOf` with one $ref (the base class) and one object schema.
-func getBaseAndChildSchemas(withDefinition definition: Schema) throws ->
+func getAllOfBaseAndChildSchemas(withDefinition definition: Schema) throws ->
     (base: ObjectSchema, child: ObjectSchema)
 {
     guard case .allOf(let allOfSchema) = definition.type else {
@@ -64,10 +65,56 @@ func getBaseAndChildSchemas(withDefinition definition: Schema) throws ->
     return (base: base, child: child)
 }
 
+/// Gets the base schema and child schema from a definition that defines an
+/// `oneOf` with one $ref (the base class) and one object schema.
+func getOneOfBaseAndChildSchemas(withDefinition definition: Schema) throws ->
+    (base: ObjectSchema, child: ObjectSchema)
+{
+    guard case .oneOf(let oneOfSchema) = definition.type else {
+        throw GetBaseAndChildSchemasError.notOneOf
+    }
+    
+    if oneOfSchema.subschemas.count != 2 {
+        throw GetBaseAndChildSchemasError.incorrectSubschemaCount
+    }
+    
+    var base: ObjectSchema!
+    var child: ObjectSchema!
+    
+    try oneOfSchema.subschemas.map { $0.type }.forEach { subschema in
+        switch subschema {
+        case .object(let childSchema):
+            child = childSchema
+        case .structure(let structure):
+            guard case .object(let baseSchema) = structure.structure.type else {
+                throw GetBaseAndChildSchemasError.badSubschemaType(subschema)
+            }
+            
+            base = baseSchema
+        default:
+            throw GetBaseAndChildSchemasError.badSubschemaType(subschema)
+        }
+    }
+    
+    if base == nil {
+        throw GetBaseAndChildSchemasError.missingBase
+    }
+    
+    if child == nil {
+        throw GetBaseAndChildSchemasError.missingChild
+    }
+    
+    return (base: base, child: child)
+}
+
 // MARK: - Validation functions
 
 func validate(testAllOfBaseSchema schema: ObjectSchema) {
     validate(that: schema, named: "TestAllOfBase", hasRequiredProperties: ["base", "test_type"])
+}
+
+func validate(testOneOfBaseSchema schema: ObjectSchema) {
+    validate(that: schema, named: "TestOneOfBase", hasRequiredProperties: ["base", "test_type"])
 }
 
 func validate(that schema: ObjectSchema, named name: String, hasRequiredProperties properties: [String]) {
@@ -136,9 +183,22 @@ func validate(that definitions: [String: Schema], containsTestAllOfChild name: S
         return XCTFail("Definition named \(name) not found.")
     }
     
-    let childSchemas = try getBaseAndChildSchemas(withDefinition: testAllOfChild)
+    let childSchemas = try getAllOfBaseAndChildSchemas(withDefinition: testAllOfChild)
     
     validate(testAllOfBaseSchema: childSchemas.base)
+    validate(that: childSchemas.child, named: name, hasRequiredProperties: propertyNames)
+}
+
+func validate(that definitions: [String: Schema], containsTestOneOfChild name: String,
+              withPropertyNames propertyNames: [String]) throws
+{
+    guard let testOneOfChild = definitions[name] else {
+        return XCTFail("Definition named \(name) not found.")
+    }
+    
+    let childSchemas = try getOneOfBaseAndChildSchemas(withDefinition: testOneOfChild)
+    
+    validate(testOneOfBaseSchema: childSchemas.base)
     validate(that: childSchemas.child, named: name, hasRequiredProperties: propertyNames)
 }
 

@@ -81,7 +81,10 @@ extension Swagger {
     }
 }
 
-struct SwaggerBuilder: Codable {
+/**
+ Codable type that codes and decodes a Swagger spec file into a Swift type.
+ */
+public struct SwaggerBuilder: Codable {
     let version: Version
     let informationBuilder: InformationBuilder
     let host: URL?
@@ -116,7 +119,7 @@ struct SwaggerBuilder: Codable {
         case externalDocumentation = "externalDocs"
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         let decodedVersion = try values.decode(Version.self, forKey: .version)
         if decodedVersion.major != 2 || decodedVersion.minor != 0 || decodedVersion.patch != nil {
@@ -144,7 +147,7 @@ struct SwaggerBuilder: Codable {
                                                                        forKey: .externalDocumentation)
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.version, forKey: .version)
         try container.encode(self.informationBuilder, forKey: .information)

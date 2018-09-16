@@ -1,0 +1,89 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Test oneOf",
+    "description": "A test API to validate parsing of the `oneOf` feature.",
+    "version": "1.0.0"
+  },
+  "host": "api.test.com",
+  "schemes": [
+    "https"
+  ],
+  "basePath": "/v1",
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/test-one-of": {
+      "get": {
+        "summary": "Test oneOf",
+        "description": "This api is solely defined to test `oneOf` parsing.",
+        "responses": {
+          "200": {
+            "description": "The test-one-of response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TestOneOfBase"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "TestOneOfBase": {
+      "required": [
+        "base",
+        "test_type"
+      ],
+      "discriminator": "test_type",
+      "properties": {
+        "base": {
+          "type": "string",
+          "description": "A key/value present on the TestOneOfBase object"
+        },
+        "test_type": {
+          "type": "string",
+          "description": "The type of TestOneOf"
+        }
+      }
+    },
+    "TestOneOfFoo": {
+      "oneOf": [{
+          "$ref": "#/definitions/TestOneOfBase"
+        },
+        {
+          "required": [
+            "foo"
+          ],
+          "properties": {
+            "foo": {
+              "type": "string",
+              "description": "A key/value only present on the TestOneOfFoo object"
+            }
+          }
+        }
+      ],
+      "description": "This is an OneOf description."
+    },
+    "TestOneOfBar": {
+      "oneOf": [{
+          "$ref": "#/definitions/TestOneOfBase"
+        },
+        {
+          "required": [
+            "bar"
+          ],
+          "properties": {
+            "bar": {
+              "type": "string",
+              "description": "A key/value only present on the TestOneOfBar object"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

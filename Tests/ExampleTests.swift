@@ -21,7 +21,7 @@ class ExampleTests: XCTestCase {
 
         guard
             let aStringProperty = schema.properties["a-string"],
-            case .string(let aStringOptionalFormat) = aStringProperty.type else
+            case .string(let aStringOptionalFormat, _) = aStringProperty.type else
         {
             return XCTFail("Example has no string property 'a-string'.")
         }

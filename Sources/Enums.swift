@@ -86,6 +86,7 @@ public enum DataType: String, Codable {
 
     case enumeration
     case allOf
+    case oneOf
     case pointer
     case any
 
@@ -96,6 +97,7 @@ public enum DataType: String, Codable {
         case properties = "properties"
         case enumeration = "enum"
         case allOf = "allOf"
+        case oneOf = "oneOf"
     }
 
     public init(from decoder: Decoder) throws {
@@ -116,6 +118,8 @@ public enum DataType: String, Codable {
             self = .enumeration
         } else if values.contains(.allOf) {
             self = .allOf
+        } else if values.contains(.oneOf) {
+            self = .oneOf
         } else {
             self = .any
         }

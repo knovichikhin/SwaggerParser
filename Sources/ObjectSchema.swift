@@ -11,6 +11,9 @@ public struct ObjectSchema {
     /// A dictionary where each key is the name of a property and each value is a
     /// schema used to validate that property.
     public let properties: [String : Schema]
+    
+    /// A list that specifies all the properties for this Object.
+    public let allProperties: [String]
 
     /// The additionalProperties keyword is used to control the handling of extra stuff, 
     /// that is, properties whose names are not listed in the properties keyword. 
@@ -22,10 +25,34 @@ public struct ObjectSchema {
     public let additionalProperties: Either<Bool, Schema>
 }
 
+struct AllPropertiesCodingKey: CodingKey {
+    var intValue: Int? { return nil }
+    let stringValue: String
+    
+    init?(intValue: Int) {
+        return nil
+    }
+    
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+    }
+}
+
+struct AllProperties: Decodable {
+    let array: [String]
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: AllPropertiesCodingKey.self)
+        
+        array = container.allKeys.map { $0.stringValue }
+    }
+}
+
 struct ObjectSchemaBuilder: Codable {
     let metadataBuilder: ObjectMetadataBuilder
     let required: [String]
     let properties: [String: SchemaBuilder]
+    let allProperties: [String]
     let additionalProperties: CodableEither<Bool, SchemaBuilder>
 
     enum CodingKeys: String, CodingKey {
@@ -39,6 +66,7 @@ struct ObjectSchemaBuilder: Codable {
         self.metadataBuilder = try ObjectMetadataBuilder(from: decoder)
         self.required = try values.decodeIfPresent([String].self, forKey: .required) ?? []
         self.properties = try values.decodeIfPresent([String: SchemaBuilder].self, forKey: .properties) ?? [:]
+        self.allProperties = try values.decodeIfPresent(AllProperties.self, forKey: .properties)?.array ?? []
         self.additionalProperties = (try values.decodeIfPresent(CodableEither<Bool, SchemaBuilder>.self,
                                                                 forKey: .additionalProperties)) ?? .a(false)
     }
@@ -61,6 +89,7 @@ extension ObjectSchemaBuilder: Builder {
             metadata: try self.metadataBuilder.build(swagger),
             required: self.required,
             properties: properties,
+            allProperties: self.allProperties,
             additionalProperties: additionalProperties)
     }
 }

@@ -14,6 +14,16 @@ class BasicTests: XCTestCase {
 
         XCTAssertEqual(swagger.host?.absoluteString, "api.uber.com")
         testInformation(swagger.information)
+        
+        guard let type = swagger.definitions["Product"]?.type else {
+            return XCTFail("Unexpectedly no product definition")
+        }
+        
+        guard case let .object(schema) = type else {
+            return XCTFail("Unexpectedly not a structure")
+        }
+        
+        XCTAssertEqual(schema.allProperties, ["product_id", "description", "capacity", "display_name", "image"])
     }
 }
 
