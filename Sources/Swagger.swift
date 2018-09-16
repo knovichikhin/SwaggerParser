@@ -170,7 +170,7 @@ public struct SwaggerBuilder: Codable {
 extension SwaggerBuilder: Builder {
     typealias Building = Swagger
 
-    func build(_ swagger: SwaggerBuilder) throws -> Swagger {
+    public func build(_ swagger: SwaggerBuilder) throws -> Swagger {
 
         // Pre-resolve and cache references to fix circular references:
         SchemaBuilder.resolver.setup()
