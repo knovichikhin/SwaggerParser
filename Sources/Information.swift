@@ -17,7 +17,7 @@ public struct Information {
     public let license: License?
 
     /// Provides the version of the application API (not to be confused with the specification version).
-    public let version: Version
+    public let version: String
 }
 
 struct InformationBuilder: Codable {
@@ -26,7 +26,7 @@ struct InformationBuilder: Codable {
     let termsOfService: String?
     let contact: ContactBuilder?
     let license: LicenseBuilder?
-    let version: Version
+    let version: String
 }
 
 extension InformationBuilder: Builder {
