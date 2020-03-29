@@ -27,10 +27,15 @@ public enum Version: Codable {
 
     public init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer()
-        var convertible: LosslessStringConvertible? = try? value.decode(String.self)
-        convertible = convertible ?? (try? value.decode(Double.self))
-        convertible = convertible ?? (try? value.decode(Float.self))
-        guard let string = convertible?.description else {
+        let string: String
+        
+        if let decodedDouble = try? value.decode(Double.self) {
+            string = decodedDouble.description
+        } else if let decodedFloat = try? value.decode(Float.self) {
+            string = decodedFloat.description
+        } else if let decodedString = try? value.decode(String.self) {
+            string = decodedString
+        } else {
             throw DecodingError("Unable to decode version")
         }
 
